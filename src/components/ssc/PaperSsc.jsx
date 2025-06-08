@@ -1,22 +1,19 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import styled from 'styled-components';
-import jsPDF from 'jspdf';
 import { Context } from '../../context/context';
+import jsPDF from 'jspdf';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
-  max-width: 500px;
-  margin: 30px auto;
+  max-width: 400px;
+  margin: 40px auto;
   background: #f8fafc;
   border-radius: 16px;
   box-shadow: 0 6px 32px rgba(0,0,0,0.10);
-  padding: 16px 18px 16px 18px;
+  padding: 32px 28px 24px 28px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  min-height: 0;
-  max-height: 80vh;
-  overflow-y: auto;
 `;
 
 const Title = styled.h2`
@@ -45,18 +42,6 @@ const Label = styled.label`
 `;
 
 const Select = styled.select`
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1.5px solid #bdbdbd;
-  font-size: 1rem;
-  background: #fff;
-  transition: border 0.2s;
-  &:focus {
-    border-color: #1976d2;
-  }
-`;
-
-const Input = styled.input`
   padding: 8px 12px;
   border-radius: 8px;
   border: 1.5px solid #bdbdbd;
@@ -122,80 +107,62 @@ const DownloadBtn = styled.button`
   }
 `;
 
-const paperType = "neetug";
-const subjectOptions = [
-  { value: "physics", label: "Physics" },
-  { value: "chemistry", label: "Chemistry" },
-  { value: "biology", label: "Biology" },
-  { value: "all", label: "All (Physics, Chemistry, Biology)" },
-];
-
-const QuizNEET = () => {
+const PaperJEE = () => {
+  const [exam, setExam] = useState('jee mains');
   const [subject, setSubject] = useState('physics');
-  const [difficulty, setDifficulty] = useState('easy');
-  const [topics, setTopics] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
-  const [showResult, setShowResult] = useState(false);
   const [customLoading, setCustomLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
-
-
-
+  const [showResult, setShowResult] = useState(false);
 
   const [input, setInput] = useState("");
-      const [recentPrompt, setRecentPrompt] = useState("");
-      const [previousPrompt, setPreviousPrompt] = useState([]);
-      const [loading, setLoading] = useState(false);
-      const [resultData, setResultData] = useState("");
-      const processResponse1 = (response) => {
-        setResultData(response);
-      };
-      const onSent6 = async (exam, sub, topic, difficulty, numQues) => {
-        setResultData("");
-        setLoading(true);
-        setShowResult(true);
-        let response;
-    
-        if (exam !== undefined) {
-          response = await run6(exam, sub, topic, difficulty, numQues);
-          setRecentPrompt(exam + " " + sub + " " + topic + " " + difficulty);
-        } else {
-          setPreviousPrompt(prev => [...prev, input]);
-          setRecentPrompt(input);
-          response = await run6(input);
-        }
-    
-        processResponse1(response);
-        setLoading(false);
-        setInput("");
-      };
-      async function run6(exam, sub, topic, difficulty, numquestions) {
-          const papergene = `
-      "Generate a well-structured, in-syllabus multiple-choice quiz for the ${exam} in the subject of ${sub}${topic ? `, specifically focusing on the topic : **${topic}**` : ''}.
-      The quiz must contain exactly ${numquestions} multiple-choice questions (MCQs), adhering strictly to the latest syllabus and question pattern of the exam.
-      Formatting and structure guidelines:
-      Each question should be clearly numbered.
-      Present the question text in a new paragraph.
-      Provide exactly 4 answer choices labeled (A), (B), (C), and (D), each on a separate line.
-      Leave a blank line between questions for readability.
-      Indicate the correct answer immediately after each question, using this format: Answer: [Option Letter].
-      Ensure that each question and its options are concise and do not exceed 5 lines total (to ensure proper formatting in PDF).
-      Do NOT include:
-      Explanations, hints, or additional instructions
-      Any content outside of the formatted quiz
-      Begin the quiz with a centered heading that clearly shows:
-      "${exam} – ${sub}${topic ? ` Topic: ${topic}` : ''}"
-      The overall difficulty level should be: ${difficulty || 'easy'}.
-      Ensure the layout is clean, minimal, and optimized for PDF export.
-      Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
-      Instead, use plain text math notation. For example:
-      Write x^2 for "x squared"
-      Write sqrt(x) for square root
-      Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
-      This ensures compatibility with plain text and PDF formats."
-      `;
+          const [recentPrompt, setRecentPrompt] = useState("");
+          const [previousPrompt, setPreviousPrompt] = useState([]);
+          const [loading, setLoading] = useState(false);
+          const [resultData, setResultData] = useState("");
+          const processResponse1 = (response) => {
+          setResultData(response);
+        };
+      const onSent5 = async (exam, sub, num) => {
+          setResultData("");
+          setLoading(true);
+          setShowResult(true);
+          let response;
       
-          const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+          if (exam !== undefined) {
+            response = await run5(exam, sub, num);
+            setRecentPrompt(exam + " " + sub + " " + num);
+          } else {
+            setPreviousPrompt(prev => [...prev, input]);
+            setRecentPrompt(input);
+            response = await run5(input);
+          }
+      
+          processResponse1(response);
+          setLoading(false);
+          setInput("");
+        };
+      async function run5(exam, sub, num) {
+          
+          const papergene = `
+You are an expert question setter for Indian SSC (Staff Selection Commission) competitive examinations (such as SSC CGL, SSC CHSL, SSC MTS, etc.).
+Generate a high-quality, SSC-level exam paper for the "${exam}" in the subject of "${sub}".
+The paper must:
+- Begin with a clear heading that clearly displays the exam and subject names.
+- Below the heading, list exactly ${num} unique and relevant questions that test a range of concepts and difficulty levels appropriate for this subject, as per the latest SSC syllabus and pattern.
+- Mix conceptual, application-based, and tricky questions to reflect real SSC exam standards.
+- Clearly number each question and separate them with one blank line for readability.
+- Do NOT include answers, explanations, or extra instructions—just the heading and the questions.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation. For example:
+  - Write x^2 for "x squared"
+  - Write sqrt(x) for square root
+  - Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
+
+Ensure the questions are suitable for a student preparing for the "${exam}" and match the latest SSC exam trends and difficulty.
+This ensures compatibility with plain text and PDF formats.
+`;
+          const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
           const genAI = new GoogleGenerativeAI(apiKey);
       
           const model = genAI.getGenerativeModel({
@@ -224,25 +191,47 @@ const QuizNEET = () => {
           const result = await chatSession.sendMessage(fullPrompt);
           return result.response.text();
         }
+  
 
+  const resultRef = useRef();
 
-
-  const handleSubmit = (e) => {
+  // Custom loading sequence
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setShowResult(false);
     setCustomLoading(true);
     setLoadingStage(1);
 
-    setTimeout(() => setLoadingStage(2), 6000);
-    setTimeout(() => setLoadingStage(3), 11000);
+    setTimeout(() => setLoadingStage(2), 6000); // After 6s
+    setTimeout(() => setLoadingStage(3), 11000); // After 11s
     setTimeout(() => {
       setCustomLoading(false);
       setShowResult(true);
-      onSent6(paperType, subject, topics, difficulty, numQuestions);
-    }, 16000);
+      onSent5(exam, subject, numQuestions);
+    }, 16000); // After 16s
   };
 
-  // PDF download logic
+  const paperOptions = [
+    { value: "jee mains", label: "JEE Mains" },
+    { value: "jee advance", label: "JEE Advance" },
+  ];
+
+  const subjectOptions = [
+    { value: "physics", label: "Physics" },
+    { value: "chemistry", label: "Chemistry" },
+    { value: "maths", label: "Maths" },
+    { value: "all", label: "All (Physics, Chemistry, Maths)" },
+  ];
+
+  // Loading message logic
+  let loadingMessage = '';
+  if (customLoading) {
+    if (loadingStage === 1) loadingMessage = 'Thinking...';
+    else if (loadingStage === 2) loadingMessage = 'Generating question paper...';
+    else if (loadingStage === 3) loadingMessage = 'Finalising...';
+  }
+
+  // Improved PDF download: fit content to A4, avoid cut-off
   const handleDownloadPDF = () => {
     if (!resultData) return;
     const pdf = new jsPDF({
@@ -257,7 +246,7 @@ const QuizNEET = () => {
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `NEET UG - ${subject.toUpperCase()}${topics ? ` - Topics: ${topics}` : ''} - Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
+      `${exam.toUpperCase()} - ${subject.toUpperCase()} (${numQuestions} Questions)`,
       margin,
       y
     );
@@ -278,7 +267,7 @@ const QuizNEET = () => {
     }
 
     pdf.setFontSize(12);
-    lines.forEach((line) => {
+    lines.forEach((line, idx) => {
       const split = pdf.splitTextToSize(line, pageWidth);
       split.forEach((txt) => {
         if (y > pdf.internal.pageSize.getHeight() - margin) {
@@ -291,20 +280,25 @@ const QuizNEET = () => {
       y += 5;
     });
 
-    pdf.save(`neetug_${subject}_quiz.pdf`);
+    pdf.save(`${exam}_${subject}_paper.pdf`);
   };
-
-  let loadingMessage = '';
-  if (customLoading) {
-    if (loadingStage === 1) loadingMessage = 'Thinking...';
-    else if (loadingStage === 2) loadingMessage = 'Generating quiz...';
-    else if (loadingStage === 3) loadingMessage = 'Finalising...';
-  }
 
   return (
     <Container>
-      <Title>NEET Quiz Generator</Title>
+      <Title>JEE Paper Generator</Title>
       <Form onSubmit={handleSubmit}>
+        <Field>
+          <Label htmlFor="exam">Type of Paper:</Label>
+          <Select
+            id="exam"
+            value={exam}
+            onChange={(e) => setExam(e.target.value)}
+          >
+            {paperOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </Field>
         <Field>
           <Label htmlFor="subject">Subject:</Label>
           <Select
@@ -315,18 +309,6 @@ const QuizNEET = () => {
             {subjectOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
-          </Select>
-        </Field>
-        <Field>
-          <Label htmlFor="difficulty">Difficulty:</Label>
-          <Select
-            id="difficulty"
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-          >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
           </Select>
         </Field>
         <Field>
@@ -343,25 +325,17 @@ const QuizNEET = () => {
             <option value={25}>25</option>
           </Select>
         </Field>
-        <Field>
-          <Label htmlFor="topics">Topics (optional):</Label>
-          <Input
-            id="topics"
-            type="text"
-            value={topics}
-            onChange={(e) => setTopics(e.target.value)}
-            placeholder="Enter topics separated by commas"
-          />
-        </Field>
-        <Button type="submit">Generate Quiz</Button>
+        <Button type="submit" disabled={customLoading}>
+          Generate Paper
+        </Button>
       </Form>
-      <Result>
+      <Result ref={resultRef}>
         {customLoading ? (
           <Loading>{loadingMessage}</Loading>
         ) : showResult && loading ? (
           <Loading>Thinking...</Loading>
         ) : showResult && resultData ? (
-          <Loading>Quiz generated! You can now download the PDF.</Loading>
+          <Loading>Paper generated! You can now download the PDF.</Loading>
         ) : null}
       </Result>
       {showResult && resultData && !loading && (
@@ -373,4 +347,4 @@ const QuizNEET = () => {
   );
 };
 
-export default QuizNEET;
+export default PaperJEE;

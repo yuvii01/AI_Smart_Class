@@ -1,7 +1,7 @@
 import React, { useContext, useState, useRef } from 'react';
 import styled from 'styled-components';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import jsPDF from 'jspdf';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
   max-width: 400px;
@@ -106,108 +106,109 @@ const DownloadBtn = styled.button`
   }
 `;
 
-const PaperJEE = () => {
-  const [exam, setExam] = useState('jee mains');
-  const [subject, setSubject] = useState('physics');
+const paperOptions = [
+  { value: "mathematics", label: "Mathematics" },
+  { value: "general ability test", label: "General Ability Test" },
+  { value: "all", label: "Both Papers (Maths + GAT)" },
+];
+
+const subjectOptions = [
+  { value: "mathematics", label: "Mathematics" },
+  { value: "english", label: "English" },
+  { value: "physics", label: "Physics" },
+  { value: "chemistry", label: "Chemistry" },
+  { value: "general science", label: "General Science" },
+  { value: "history", label: "History" },
+  { value: "geography", label: "Geography" },
+  { value: "current affairs", label: "Current Affairs" },
+  { value: "all", label: "All Subjects" },
+];
+
+const PaperNda = () => {
+  const [exam, setExam] = useState('mathematics');
+  const [subject, setSubject] = useState('mathematics');
   const [numQuestions, setNumQuestions] = useState(5);
   const [customLoading, setCustomLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [input, setInput] = useState("");
-    const [recentPrompt, setRecentPrompt] = useState("");
-    const [previousPrompt, setPreviousPrompt] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [resultData, setResultData] = useState("");
-    const processResponse1 = (response) => {
-    setResultData(response);
-  };
-const onSent5 = async (exam, sub, num) => {
-    setResultData("");
-    setLoading(true);
-    setShowResult(true);
-    let response;
+      const [recentPrompt, setRecentPrompt] = useState("");
+      const [previousPrompt, setPreviousPrompt] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [resultData, setResultData] = useState("");
+      const processResponse1 = (response) => {
+      setResultData(response);
+    };
+  const onSent5 = async (exam, sub, num) => {
+      setResultData("");
+      setLoading(true);
+      setShowResult(true);
+      let response;
+  
+      if (exam !== undefined) {
+        response = await run5(exam, sub, num);
+        setRecentPrompt(exam + " " + sub + " " + num);
+      } else {
+        setPreviousPrompt(prev => [...prev, input]);
+        setRecentPrompt(input);
+        response = await run5(input);
+      }
+  
+      processResponse1(response);
+      setLoading(false);
+      setInput("");
+    };
+  async function run5(exam, sub, num) {
+      const papergene = `
+    You are an expert question setter for the National Defence Academy (NDA) entrance examination in India.
+Generate a high-quality, NDA-level exam paper for the "${exam}" in the subject of "${sub}".
+The paper must:
+- Begin with a clear heading showing the exam and subject names.
+- Contain exactly ${num} unique and original questions, covering a range of important topics and difficulty levels as per the latest NDA syllabus and pattern for this subject.
+- Mix conceptual, application-based, and tricky questions to reflect real NDA exam standards.
+- Clearly number each question and separate them with a blank line for readability.
+- Do NOT include answers, explanations, or extra instructions—just the heading and the questions.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation. For example:
+  - Write x^2 for "x squared"
+  - Write sqrt(x) for square root
+  - Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
 
-    if (exam !== undefined) {
-      response = await run5(exam, sub, num);
-      setRecentPrompt(exam + " " + sub + " " + num);
-    } else {
-      setPreviousPrompt(prev => [...prev, input]);
-      setRecentPrompt(input);
-      response = await run5(input);
+Ensure the questions are suitable for a student preparing for the NDA exam and match the latest exam trends and difficulty.
+This ensures compatibility with plain text and PDF formats.
+  `;
+  
+      const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
+      const genAI = new GoogleGenerativeAI(apiKey);
+  
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
+  
+      const generationConfig = {
+        temperature: 1,
+        topP: 0.95,
+        topK: 64,
+        responseMimeType: "text/plain",
+      };
+  
+      const fullPrompt = papergene;
+  
+      const chatSession = model.startChat({
+        generationConfig,
+        history: [
+          {
+            role: "user",
+            parts: [{ text: fullPrompt }],
+          },
+        ],
+      });
+  
+      const result = await chatSession.sendMessage(fullPrompt);
+      return result.response.text();
     }
 
-    processResponse1(response);
-    setLoading(false);
-    setInput("");
-  };
-async function run5(exam, sub, num) {
-    const papergene = `
-  Generate an exam paper for the ${exam} in the subject of ${sub}. The paper should begin with a heading that clearly displays the exam and subject names. Below the heading, list exactly ${num} unique and relevant questions that test a range of concepts and difficulty levels appropriate for this subject. Each question should be clearly numbered and separated by one blank line for readability. Do not include answers or additional instructions—just the heading and the questions.
-  Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
-
-Instead, use plain text math notation. For example:
-
-Write x^2 for "x squared"
-
-Write sqrt(x) for square root
-
-Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
-
-This ensures compatibility with plain text and PDF formats."
-`;
-
-    const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-    });
-
-    const generationConfig = {
-      temperature: 1,
-      topP: 0.95,
-      topK: 64,
-      responseMimeType: "text/plain",
-    };
-
-    const fullPrompt = papergene;
-
-    const chatSession = model.startChat({
-      generationConfig,
-      history: [
-        {
-          role: "user",
-          parts: [{ text: fullPrompt }],
-        },
-      ],
-    });
-
-    const result = await chatSession.sendMessage(fullPrompt);
-    return result.response.text();
-  }
-
-  // const { onSent5, loading, resultData } = useContext(Context);
-
   const resultRef = useRef();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // Custom loading sequence
   const handleSubmit = async (e) => {
@@ -224,18 +225,6 @@ This ensures compatibility with plain text and PDF formats."
       onSent5(exam, subject, numQuestions);
     }, 16000); // After 16s
   };
-
-  const paperOptions = [
-    { value: "jee mains", label: "JEE Mains" },
-    { value: "jee advance", label: "JEE Advance" },
-  ];
-
-  const subjectOptions = [
-    { value: "physics", label: "Physics" },
-    { value: "chemistry", label: "Chemistry" },
-    { value: "maths", label: "Maths" },
-    { value: "all", label: "All (Physics, Chemistry, Maths)" },
-  ];
 
   // Loading message logic
   let loadingMessage = '';
@@ -260,7 +249,7 @@ This ensures compatibility with plain text and PDF formats."
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `${exam.toUpperCase()} - ${subject.toUpperCase()} (${numQuestions} Questions)`,
+      `NDA - ${exam.toUpperCase()} - ${subject.toUpperCase()} (${numQuestions} Questions)`,
       margin,
       y
     );
@@ -294,15 +283,15 @@ This ensures compatibility with plain text and PDF formats."
       y += 5;
     });
 
-    pdf.save(`${exam}_${subject}_paper.pdf`);
+    pdf.save(`nda_${exam}_${subject}_paper.pdf`);
   };
 
   return (
     <Container>
-      <Title>JEE Paper Generator</Title>
+      <Title>NDA Paper Generator</Title>
       <Form onSubmit={handleSubmit}>
         <Field>
-          <Label htmlFor="exam">Type of Paper:</Label>
+          <Label htmlFor="exam">Paper:</Label>
           <Select
             id="exam"
             value={exam}
@@ -361,4 +350,4 @@ This ensures compatibility with plain text and PDF formats."
   );
 };
 
-export default PaperJEE;
+export default PaperNda;

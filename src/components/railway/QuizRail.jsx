@@ -1,19 +1,22 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
 import jsPDF from 'jspdf';
-// import { Context } from '../../context/context';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Context } from '../../context/context';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
-  max-width: 400px;
-  margin: 40px auto;
+  max-width: 500px;
+  margin: 30px auto;
   background: #f8fafc;
   border-radius: 16px;
   box-shadow: 0 6px 32px rgba(0,0,0,0.10);
-  padding: 32px 28px 24px 28px;
+  padding: 16px 18px 16px 18px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-height: 0;
+  max-height: 80vh;
+  overflow-y: auto;
 `;
 
 const Title = styled.h2`
@@ -119,75 +122,78 @@ const DownloadBtn = styled.button`
   }
 `;
 
-// UPSC subjects only
+const paperOptions = [
+  { value: "rrb ntpc", label: "RRB NTPC" },
+  { value: "rrb group d", label: "RRB Group D" },
+  { value: "rrb je", label: "RRB JE" },
+  { value: "rrb alp", label: "RRB ALP" },
+];
+
 const subjectOptions = [
-  { value: "history", label: "History" },
-  { value: "geography", label: "Geography" },
-  { value: "polity", label: "Polity" },
-  { value: "economics", label: "Economics" },
-  { value: "science", label: "Science" },
-  { value: "environment", label: "Environment" },
+  { value: "mathematics", label: "Mathematics" },
+  { value: "general intelligence & reasoning", label: "General Intelligence & Reasoning" },
+  { value: "general science", label: "General Science" },
+  { value: "general awareness", label: "General Awareness" },
   { value: "current affairs", label: "Current Affairs" },
   { value: "all", label: "All Subjects" },
 ];
 
-const RevisionUPSC = () => {
-  const [subject, setSubject] = useState('');
-  const [topic, setTopic] = useState('');
-  const [showResult, setShowResult] = useState(false);
-  const [customLoading, setCustomLoading] = useState(false);
-  const [loadingStage, setLoadingStage] = useState(0);
-
-   const [input, setInput] = useState("");
-          const [recentPrompt, setRecentPrompt] = useState("");
-          const [previousPrompt, setPreviousPrompt] = useState([]);
-          const [loading, setLoading] = useState(false);
-          const [resultData, setResultData] = useState("");
-          const processResponse1 = (response) => {
-            setResultData(response);
-          };
-          const onSent7 = async (exam, sub, topic) => {
+const QuizRail = () => {
+  const [paperType, setPaperType] = useState('rrb ntpc');
+  const [subject, setSubject] = useState('mathematics');
+  const [difficulty, setDifficulty] = useState('easy');
+  const [topics, setTopics] = useState('');
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [input, setInput] = useState("");
+        const [recentPrompt, setRecentPrompt] = useState("");
+        const [previousPrompt, setPreviousPrompt] = useState([]);
+        const [loading, setLoading] = useState(false);
+        const [resultData, setResultData] = useState("");
+        const processResponse1 = (response) => {
+          setResultData(response);
+        };
+        const onSent6 = async (exam, sub, topic, difficulty, numQues) => {
           setResultData("");
           setLoading(true);
           setShowResult(true);
           let response;
       
           if (exam !== undefined) {
-            response = await run7(exam, sub, topic);
-            setRecentPrompt(exam + " " + sub + " " + topic);
+            response = await run6(exam, sub, topic, difficulty, numQues);
+            setRecentPrompt(exam + " " + sub + " " + topic + " " + difficulty);
           } else {
             setPreviousPrompt(prev => [...prev, input]);
             setRecentPrompt(input);
-            response = await run7(input);
+            response = await run6(input);
           }
       
           processResponse1(response);
           setLoading(false);
           setInput("");
         };
-        async function run7(exam, sub, topic) {
+        async function run6(exam, sub, topic, difficulty, numquestions) {
+            
             const papergene = `
-        Generate the best possible, chapter-wise detailed revision notes for the ${exam} in the subject of ${sub}${topic ? `, specifically focusing on the topic: ${topic}` : ''}. 
-        Begin with a clear heading that displays the exam and subject${topic ? ` and topic` : ''} names. 
-        Organize the notes chapter-wise, with each chapter or major concept as a separate section. 
-        Within each chapter, comprehensively cover all key concepts, formulas, important facts, and include concise explanations, diagrams (if relevant), and tips for quick revision. 
-        Use bullet points, subheadings, and clear sections for maximum readability. 
-        Ensure the content is accurate, up-to-date, and suitable for last-minute revision for high performance in the exam. 
-        Do not include questions, answers , —just the chapter-wise revision notes.
-        Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
-        
-        Instead, use plain text math notation. For example:
-        
-        Write x^2 for "x squared"
-        
-        Write sqrt(x) for square root
-        
-        Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
-        
-        This ensures compatibility with plain text and PDF formats."
-        `;
-        
-            const apiKey = "AIzaSyDh1bDehR9jzy1wT-kkgAGQ9TlQUkXlE80";
+You are an expert question setter for Indian Railway recruitment entrance examinations (such as RRB NTPC, RRB Group D, RRB JE, RRB ALP, etc.).
+Generate a well-structured, in-syllabus multiple-choice quiz for the "${exam}" in the subject of "${sub}"${topic ? `, specifically focusing on the topic: "${topic}"` : ''}.
+The quiz must:
+- Contain exactly ${numquestions} unique, original multiple-choice questions (MCQs), strictly following the latest railway exam syllabus and question pattern for this subject.
+- Mix conceptual, application-based, and tricky questions to reflect real railway exam standards and trends.
+- Each question should be clearly numbered and presented in a new paragraph.
+- Provide exactly 4 answer choices labeled (A), (B), (C), and (D), each on a separate line.
+- Indicate the correct answer immediately after each question, using this format: Answer: [Option Letter].
+- Do NOT include explanations, hints, or extra instructions—just the quiz.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation (e.g., x^2 for "x squared", sqrt(x) for square root, integral from 0 to x of 1 / (1 + t^4) dt).
+- Each question and its options should not exceed 5 lines total (for PDF formatting).
+- Leave a blank line between questions for readability.
+- Begin the quiz with a centered heading: "${exam.toUpperCase()} – ${sub.toUpperCase()}${topic ? ` | Topic: ${topic}` : ''} | Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}"
+- Ensure the layout is clean, minimal, and optimized for PDF export.
+
+The overall difficulty level should be: ${difficulty || 'easy'}.
+This ensures compatibility with plain text and PDF formats.
+`;
+            const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
             const genAI = new GoogleGenerativeAI(apiKey);
         
             const model = genAI.getGenerativeModel({
@@ -216,7 +222,9 @@ const RevisionUPSC = () => {
             const result = await chatSession.sendMessage(fullPrompt);
             return result.response.text();
           }
-  
+  const [showResult, setShowResult] = useState(false);
+  const [customLoading, setCustomLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -229,7 +237,7 @@ const RevisionUPSC = () => {
     setTimeout(() => {
       setCustomLoading(false);
       setShowResult(true);
-      onSent7("upsc", subject, topic);
+      onSent6(paperType, subject, topics, difficulty, numQuestions);
     }, 16000);
   };
 
@@ -248,13 +256,13 @@ const RevisionUPSC = () => {
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `UPSC${subject ? ` - Subject: ${subject}` : ''}${topic ? ` - Topic: ${topic}` : ''}`,
+      `Railway - ${paperType.toUpperCase()} - ${subject.toUpperCase()}${topics ? ` - Topics: ${topics}` : ''} - Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
       margin,
       y
     );
     y += 30;
 
-    // Parse HTML and extract lines as plain text
+    // Parse HTML and extract questions as plain text
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = resultData;
 
@@ -282,20 +290,32 @@ const RevisionUPSC = () => {
       y += 5;
     });
 
-    pdf.save(`upsc_revision_plan.pdf`);
+    pdf.save(`railway_${paperType}_${subject}_quiz.pdf`);
   };
 
   let loadingMessage = '';
   if (customLoading) {
     if (loadingStage === 1) loadingMessage = 'Thinking...';
-    else if (loadingStage === 2) loadingMessage = 'Generating revision plan...';
+    else if (loadingStage === 2) loadingMessage = 'Generating quiz...';
     else if (loadingStage === 3) loadingMessage = 'Finalising...';
   }
 
   return (
     <Container>
-      <Title>UPSC Revision Planner</Title>
+      <Title>Railway Quiz Generator</Title>
       <Form onSubmit={handleSubmit}>
+        <Field>
+          <Label htmlFor="paperType">Type of Paper:</Label>
+          <Select
+            id="paperType"
+            value={paperType}
+            onChange={(e) => setPaperType(e.target.value)}
+          >
+            {paperOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </Field>
         <Field>
           <Label htmlFor="subject">Subject:</Label>
           <Select
@@ -303,23 +323,48 @@ const RevisionUPSC = () => {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
           >
-            <option value="">Select Subject</option>
             {subjectOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </Select>
         </Field>
         <Field>
-          <Label htmlFor="topic">Topic (optional):</Label>
+          <Label htmlFor="difficulty">Difficulty:</Label>
+          <Select
+            id="difficulty"
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </Select>
+        </Field>
+        <Field>
+          <Label htmlFor="numQuestions">Number of Questions:</Label>
+          <Select
+            id="numQuestions"
+            value={numQuestions}
+            onChange={(e) => setNumQuestions(Number(e.target.value))}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={15}>15</option>
+            <option value={20}>20</option>
+            <option value={25}>25</option>
+          </Select>
+        </Field>
+        <Field>
+          <Label htmlFor="topics">Topics (optional):</Label>
           <Input
-            id="topic"
+            id="topics"
             type="text"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="Enter topic if any"
+            value={topics}
+            onChange={(e) => setTopics(e.target.value)}
+            placeholder="Enter topics separated by commas"
           />
         </Field>
-        <Button type="submit">Generate Revision Plan</Button>
+        <Button type="submit">Generate Quiz</Button>
       </Form>
       <Result>
         {customLoading ? (
@@ -327,7 +372,7 @@ const RevisionUPSC = () => {
         ) : showResult && loading ? (
           <Loading>Thinking...</Loading>
         ) : showResult && resultData ? (
-          <Loading>Revision plan generated! You can now download the PDF.</Loading>
+          <Loading>Quiz generated! You can now download the PDF.</Loading>
         ) : null}
       </Result>
       {showResult && resultData && !loading && (
@@ -339,4 +384,4 @@ const RevisionUPSC = () => {
   );
 };
 
-export default RevisionUPSC;
+export default QuizRail;

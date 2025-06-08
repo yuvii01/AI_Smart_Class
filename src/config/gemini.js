@@ -500,6 +500,7 @@ const generationConfig = {
   const result = await chatSession.sendMessage(fullPrompt);
   console.log(result.response.text());
   return result.response.text();
+
 }
 
-export { run1, run11 , run21 , run2, run3, run4 , run5 , run6 , run7};
+export { run1, run11 , run21 , run2, run3, run4 , run5 , run6 , run7 } ;

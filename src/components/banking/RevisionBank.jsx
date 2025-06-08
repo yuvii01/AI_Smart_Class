@@ -1,8 +1,7 @@
 import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 import jsPDF from 'jspdf';
-// import { Context } from '../../context/context';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
   max-width: 400px;
@@ -119,104 +118,107 @@ const DownloadBtn = styled.button`
   }
 `;
 
-// UPSC subjects only
+const paperOptions = [
+  { value: "ibps po", label: "IBPS PO" },
+  { value: "ibps clerk", label: "IBPS Clerk" },
+  { value: "sbi po", label: "SBI PO" },
+  { value: "sbi clerk", label: "SBI Clerk" },
+  { value: "rbi assistant", label: "RBI Assistant" },
+];
+
 const subjectOptions = [
-  { value: "history", label: "History" },
-  { value: "geography", label: "Geography" },
-  { value: "polity", label: "Polity" },
-  { value: "economics", label: "Economics" },
-  { value: "science", label: "Science" },
-  { value: "environment", label: "Environment" },
-  { value: "current affairs", label: "Current Affairs" },
+  { value: "quantitative aptitude", label: "Quantitative Aptitude" },
+  { value: "reasoning ability", label: "Reasoning Ability" },
+  { value: "english language", label: "English Language" },
+  { value: "general awareness", label: "General Awareness" },
+  { value: "computer knowledge", label: "Computer Knowledge" },
   { value: "all", label: "All Subjects" },
 ];
 
-const RevisionUPSC = () => {
+const RevisionBank = () => {
+  const [paperType, setPaperType] = useState('ibps po');
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [customLoading, setCustomLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
-
-   const [input, setInput] = useState("");
-          const [recentPrompt, setRecentPrompt] = useState("");
-          const [previousPrompt, setPreviousPrompt] = useState([]);
-          const [loading, setLoading] = useState(false);
-          const [resultData, setResultData] = useState("");
-          const processResponse1 = (response) => {
-            setResultData(response);
-          };
-          const onSent7 = async (exam, sub, topic) => {
-          setResultData("");
-          setLoading(true);
-          setShowResult(true);
-          let response;
-      
-          if (exam !== undefined) {
-            response = await run7(exam, sub, topic);
-            setRecentPrompt(exam + " " + sub + " " + topic);
-          } else {
-            setPreviousPrompt(prev => [...prev, input]);
-            setRecentPrompt(input);
-            response = await run7(input);
-          }
-      
-          processResponse1(response);
-          setLoading(false);
-          setInput("");
-        };
-        async function run7(exam, sub, topic) {
-            const papergene = `
-        Generate the best possible, chapter-wise detailed revision notes for the ${exam} in the subject of ${sub}${topic ? `, specifically focusing on the topic: ${topic}` : ''}. 
-        Begin with a clear heading that displays the exam and subject${topic ? ` and topic` : ''} names. 
-        Organize the notes chapter-wise, with each chapter or major concept as a separate section. 
-        Within each chapter, comprehensively cover all key concepts, formulas, important facts, and include concise explanations, diagrams (if relevant), and tips for quick revision. 
-        Use bullet points, subheadings, and clear sections for maximum readability. 
-        Ensure the content is accurate, up-to-date, and suitable for last-minute revision for high performance in the exam. 
-        Do not include questions, answers , —just the chapter-wise revision notes.
-        Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
-        
-        Instead, use plain text math notation. For example:
-        
-        Write x^2 for "x squared"
-        
-        Write sqrt(x) for square root
-        
-        Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
-        
-        This ensures compatibility with plain text and PDF formats."
-        `;
-        
-            const apiKey = "AIzaSyDh1bDehR9jzy1wT-kkgAGQ9TlQUkXlE80";
-            const genAI = new GoogleGenerativeAI(apiKey);
-        
-            const model = genAI.getGenerativeModel({
-              model: "gemini-1.5-flash",
-            });
-        
-            const generationConfig = {
-              temperature: 1,
-              topP: 0.95,
-              topK: 64,
-              responseMimeType: "text/plain",
-            };
-        
-            const fullPrompt = papergene;
-        
-            const chatSession = model.startChat({
-              generationConfig,
-              history: [
-                {
-                  role: "user",
-                  parts: [{ text: fullPrompt }],
-                },
-              ],
-            });
-        
-            const result = await chatSession.sendMessage(fullPrompt);
-            return result.response.text();
-          }
+  const [input, setInput] = useState("");
+      const [recentPrompt, setRecentPrompt] = useState("");
+      const [previousPrompt, setPreviousPrompt] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [resultData, setResultData] = useState("");
+      const processResponse1 = (response) => {
+        setResultData(response);
+      };
+      const onSent7 = async (exam, sub, topic) => {
+      setResultData("");
+      setLoading(true);
+      setShowResult(true);
+      let response;
   
+      if (exam !== undefined) {
+        response = await run7(exam, sub, topic);
+        setRecentPrompt(exam + " " + sub + " " + topic);
+      } else {
+        setPreviousPrompt(prev => [...prev, input]);
+        setRecentPrompt(input);
+        response = await run7(input);
+      }
+  
+      processResponse1(response);
+      setLoading(false);
+      setInput("");
+    };
+    async function run7(exam, sub, topic) {
+        const papergene = `
+You are an expert mentor for Indian banking competitive exams (such as IBPS PO, SBI Clerk, RBI Assistant, etc.).
+Generate the best possible, chapter-wise detailed revision notes for the "${exam}" in the subject of "${sub}"${topic ? `, specifically focusing on the topic: ${topic}` : ''}.
+Instructions:
+- Begin with a clear heading that displays the exam and subject${topic ? ` and topic` : ''} names.
+- Organize the notes chapter-wise, with each chapter or major concept as a separate section.
+- Within each chapter, comprehensively cover all key concepts, formulas, important facts, and include concise explanations, diagrams (if relevant), and tips for quick revision.
+- Use bullet points, subheadings, and clear sections for maximum readability.
+- Ensure the content is accurate, up-to-date, and suitable for last-minute revision for high performance in the banking exam.
+- Do NOT include questions, answers, or anything except the chapter-wise revision notes.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation. For example:
+  - Write x^2 for "x squared"
+  - Write sqrt(x) for square root
+  - Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
+
+This ensures compatibility with plain text and PDF formats.
+`;
+    
+        const apiKey = "AIzaSyDh1bDehR9jzy1wT-kkgAGQ9TlQUkXlE80";
+        const genAI = new GoogleGenerativeAI(apiKey);
+    
+        const model = genAI.getGenerativeModel({
+          model: "gemini-1.5-flash",
+        });
+    
+        const generationConfig = {
+          temperature: 1,
+          topP: 0.95,
+          topK: 64,
+          responseMimeType: "text/plain",
+        };
+    
+        const fullPrompt = papergene;
+    
+        const chatSession = model.startChat({
+          generationConfig,
+          history: [
+            {
+              role: "user",
+              parts: [{ text: fullPrompt }],
+            },
+          ],
+        });
+    
+        const result = await chatSession.sendMessage(fullPrompt);
+        return result.response.text();
+      }
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -229,7 +231,7 @@ const RevisionUPSC = () => {
     setTimeout(() => {
       setCustomLoading(false);
       setShowResult(true);
-      onSent7("upsc", subject, topic);
+      onSent7(paperType, subject, topic);
     }, 16000);
   };
 
@@ -248,7 +250,7 @@ const RevisionUPSC = () => {
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `UPSC${subject ? ` - Subject: ${subject}` : ''}${topic ? ` - Topic: ${topic}` : ''}`,
+      `${paperType.toUpperCase()}${subject ? ` - Subject: ${subject}` : ''}${topic ? ` - Topic: ${topic}` : ''}`,
       margin,
       y
     );
@@ -282,7 +284,7 @@ const RevisionUPSC = () => {
       y += 5;
     });
 
-    pdf.save(`upsc_revision_plan.pdf`);
+    pdf.save(`${paperType}_revision_plan.pdf`);
   };
 
   let loadingMessage = '';
@@ -294,8 +296,20 @@ const RevisionUPSC = () => {
 
   return (
     <Container>
-      <Title>UPSC Revision Planner</Title>
+      <Title>Banking Revision Planner</Title>
       <Form onSubmit={handleSubmit}>
+        <Field>
+          <Label htmlFor="paperType">Type of Paper:</Label>
+          <Select
+            id="paperType"
+            value={paperType}
+            onChange={(e) => setPaperType(e.target.value)}
+          >
+            {paperOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </Field>
         <Field>
           <Label htmlFor="subject">Subject:</Label>
           <Select
@@ -339,4 +353,4 @@ const RevisionUPSC = () => {
   );
 };
 
-export default RevisionUPSC;
+export default RevisionBank;

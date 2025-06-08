@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
 import DoubtSolver from '../DoubtSolver';
-import SubjectsJEE from './SubjectsJEE';
+import SubjectsJEE from './SubjectsNda';
 
 const AppContainer = styled.div`
   min-height: 400px;

@@ -1,7 +1,8 @@
 import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
+import { Context } from '../../context/context';
 import DoubtSolver from '../DoubtSolver';
-import SubjectsJEE from './SubjectsJEE';
+import SubjectsJEE from './SubjectsSsc';
 
 const AppContainer = styled.div`
   min-height: 400px;
@@ -22,6 +23,7 @@ const DoubtsJEE = ({examType}) => {
   const handleSubjectSelect = (subject) => {
     setSelectedSubject(subject);
   };
+  const { onSent, recentPrompt, showResult, loading, resultData, setInput, input } = useContext(Context);
 
   return (
     <AppContainer>

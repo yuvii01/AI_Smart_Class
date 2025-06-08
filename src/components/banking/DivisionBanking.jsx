@@ -5,10 +5,11 @@ import styled from 'styled-components';
 // import Quiz from '../quiz/Quiz';
 // import Revision from '../revision/Revision';
 // import CurrentAffairs from '../upsc/CurrentAffairs';
-import DoubtsJEE from './DoubtsJEE';
-import PaperJEE from './PaperJEE';
-import QuizJEE from './QuizJEE';
-import RevisionJEE from './RevisionJEE';
+import DoubtsJEE from './DoubtsBank';
+import PaperJEE from './PaperBank';
+import QuizJEE from './QuizBank';
+import RevisionJEE from './RevisionBank';
+import CurrentAffairs from './CurrentAffairs';
 
 // Styled Components
 // ...existing code...
@@ -120,30 +121,34 @@ const CloseBtn = styled.button`
   }
 `;
 
-const DivisionJEE = ({examType}) => {
+const DivisionBanking = ({examType}) => {
   const [showDoubts, setShowDoubts] = useState(false);
   const [showPaper, setShowPaper] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
-
+  const [currentAffairs, setCurrentAffairs] = useState(false);
    const openOnly = (setter) => {
     setShowDoubts(false);
     setShowPaper(false);
     setShowQuiz(false);
     setShowPlanner(false);
+    setCurrentAffairs(false);
     setter(true);
   };
 
   return (
     <Container>
       <Title>{examType ? `${examType} - ` : ''}
-        JEE - What would you like to do?</Title>
+       Banking - What would you like to do?</Title>
       <BoxGrid>
         <ActionBox onClick={() => openOnly(setShowPaper)}>
           📝<div style={{marginTop: 8}}>Paper Generator</div>
         </ActionBox>
         <ActionBox onClick={() => openOnly(setShowDoubts)}>
           ❓<div style={{marginTop: 8}}>Doubts</div>
+        </ActionBox>
+        <ActionBox onClick={() => openOnly(setCurrentAffairs)}>
+          📝<div style={{marginTop: 8}}>CurrentAffairs</div>
         </ActionBox>
         <ActionBox onClick={() => openOnly(setShowQuiz)}>
           🧠{examType === "UPSC" ? "Current Affairs Booster" : "Smart Quiz Generator"}
@@ -164,6 +169,13 @@ const DivisionJEE = ({examType}) => {
           <PaperJEE examType = {examType} />
         </Popup>
       )}
+      {currentAffairs && (
+        <Popup>
+          <CloseBtn onClick={() => setCurrentAffairs(false)}>✖</CloseBtn>
+          {/* <CurrentAffairs examType = {examType} /> */}
+          <CurrentAffairs />
+        </Popup>
+      )}
       {showQuiz && (
         <Popup>
           <CloseBtn onClick={() => setShowQuiz(false)}>✖</CloseBtn>
@@ -181,4 +193,4 @@ const DivisionJEE = ({examType}) => {
   );
 };
 
-export default DivisionJEE;
+export default DivisionBanking;

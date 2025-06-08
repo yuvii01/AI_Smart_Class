@@ -1,6 +1,7 @@
 import React, { useContext, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Context } from '../../context/context';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const Container = styled.div`
   max-width: 340px;
@@ -263,7 +264,94 @@ const PaperUPSC = () => {
   const [loadingStage, setLoadingStage] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
-  const { loading, resultData } = useContext(Context);
+  const [input, setInput] = useState("");
+            const [recentPrompt, setRecentPrompt] = useState("");
+            const [previousPrompt, setPreviousPrompt] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [resultData, setResultData] = useState("");
+            const processResponse1 = (response) => {
+            setResultData(response);
+          };
+        const onSent5 = async (exam, sub, num , difficulty , paperType) => {
+            setResultData("");
+            setLoading(true);
+            setShowResult(true);
+            let response;
+        
+            if (exam !== undefined) {
+              response = await run5(exam, sub, num , difficulty , paperType);
+              setRecentPrompt(exam + " " + sub + " " + num);
+            } else {
+              setPreviousPrompt(prev => [...prev, input]);
+              setRecentPrompt(input);
+              response = await run5(input);
+            }
+        
+            processResponse1(response);
+            setLoading(false);
+            setInput("");
+          };
+        async function run5(exam, sub, num , difficulty , paperType) {
+            const papergene = `
+You are an expert question setter for UPSC (Union Public Service Commission) examinations.
+Generate a high-quality "${paperType}" exam paper for the "${exam}" in the subject of "${sub}".
+The paper must:
+- Begin with a clear heading that displays the exam name, subject, paper type, and difficulty level.
+- Below the heading, list exactly ${num} unique and relevant questions that test a range of concepts and difficulty levels appropriate for this subject and paper type, as per the latest UPSC syllabus and pattern.
+- Each question should be clearly numbered and separated by one blank line for readability.
+- Ensure the questions are suitable for the "${exam}" and match the latest UPSC trends and standards for "${paperType}" questions.
+- Do NOT include answers, explanations, or extra instructions—just the heading and the questions.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation. For example:
+  - Write x^2 for "x squared"
+  - Write sqrt(x) for square root
+  - Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
+
+The overall difficulty level should be: ${difficulty || 'medium'}.
+This ensures compatibility with plain text and PDF formats.
+
+          Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+        
+        Instead, use plain text math notation. For example:
+        
+        Write x^2 for "x squared"
+        
+        Write sqrt(x) for square root
+        
+        Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
+        
+        This ensures compatibility with plain text and PDF formats."
+        `;
+        
+            const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
+            const genAI = new GoogleGenerativeAI(apiKey);
+        
+            const model = genAI.getGenerativeModel({
+              model: "gemini-1.5-flash",
+            });
+        
+            const generationConfig = {
+              temperature: 1,
+              topP: 0.95,
+              topK: 64,
+              responseMimeType: "text/plain",
+            };
+        
+            const fullPrompt = papergene;
+        
+            const chatSession = model.startChat({
+              generationConfig,
+              history: [
+                {
+                  role: "user",
+                  parts: [{ text: fullPrompt }],
+                },
+              ],
+            });
+        
+            const result = await chatSession.sendMessage(fullPrompt);
+            return result.response.text();
+          }
 
   const resultRef = useRef();
 
@@ -280,9 +368,7 @@ const PaperUPSC = () => {
       setCustomLoading(false);
       setShowResult(true);
       // Replace alert with your UPSC paper generation logic
-      alert(
-        `Exam: ${upscExam}\nSubject: ${upscSubject}\nDifficulty: ${upscDifficulty}\nType: ${upscPaperType}\nNumber of Questions: ${upscNumQuestions}`
-      );
+      onSent5(upscExam, upscSubject, upscNumQuestions , upscDifficulty, upscPaperType);
     }, 16000); // After 16s
   };
 
@@ -374,7 +460,11 @@ const PaperUPSC = () => {
           <Loading>Paper generated! You can now download the PDF.</Loading>
         ) : null}
       </Result>
-      {/* Add DownloadBtn if needed */}
+      {/* {showResult && resultData && !loading && (
+        <DownloadBtn onClick={handleDownloadPDF}>
+          Download PDF
+        </DownloadBtn>
+      )} */}
     </Container>
   );
 };

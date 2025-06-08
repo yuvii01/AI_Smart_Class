@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
 import jsPDF from 'jspdf';
-import { Context } from '../../context/context';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
@@ -122,110 +121,112 @@ const DownloadBtn = styled.button`
   }
 `;
 
-const paperType = "neetug";
-const subjectOptions = [
-  { value: "physics", label: "Physics" },
-  { value: "chemistry", label: "Chemistry" },
-  { value: "biology", label: "Biology" },
-  { value: "all", label: "All (Physics, Chemistry, Biology)" },
+const paperOptions = [
+  { value: "ibps po", label: "IBPS PO" },
+  { value: "ibps clerk", label: "IBPS Clerk" },
+  { value: "sbi po", label: "SBI PO" },
+  { value: "sbi clerk", label: "SBI Clerk" },
+  { value: "rbi assistant", label: "RBI Assistant" },
 ];
 
-const QuizNEET = () => {
-  const [subject, setSubject] = useState('physics');
+const subjectOptions = [
+  { value: "quantitative aptitude", label: "Quantitative Aptitude" },
+  { value: "reasoning ability", label: "Reasoning Ability" },
+  { value: "english language", label: "English Language" },
+  { value: "general awareness", label: "General Awareness" },
+  { value: "computer knowledge", label: "Computer Knowledge" },
+  { value: "all", label: "All Subjects" },
+];
+
+const QuizBank = () => {
+  const [paperType, setPaperType] = useState('ibps po');
+  const [subject, setSubject] = useState('quantitative aptitude');
   const [difficulty, setDifficulty] = useState('easy');
   const [topics, setTopics] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
+  const [input, setInput] = useState("");
+    const [recentPrompt, setRecentPrompt] = useState("");
+    const [previousPrompt, setPreviousPrompt] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [resultData, setResultData] = useState("");
+    const processResponse1 = (response) => {
+      setResultData(response);
+    };
+    const onSent6 = async (exam, sub, topic, difficulty, numQues) => {
+      setResultData("");
+      setLoading(true);
+      setShowResult(true);
+      let response;
+  
+      if (exam !== undefined) {
+        response = await run6(exam, sub, topic, difficulty, numQues);
+        setRecentPrompt(exam + " " + sub + " " + topic + " " + difficulty);
+      } else {
+        setPreviousPrompt(prev => [...prev, input]);
+        setRecentPrompt(input);
+        response = await run6(input);
+      }
+  
+      processResponse1(response);
+      setLoading(false);
+      setInput("");
+    };
+    async function run6(exam, subject, topic, difficulty, numQuestions) {
+  const papergene = `
+You are an expert question setter for Indian banking exams (IBPS PO, SBI Clerk, RBI Assistant, etc.).
+Generate a high-quality, exam-level multiple-choice quiz for the "${exam}" in the subject of "${subject}"${topic ? `, specifically focusing on the topic: "${topic}"` : ''}.
+Requirements:
+- The quiz must contain exactly ${numQuestions} unique, original MCQs, strictly following the latest syllabus and pattern for this exam and subject.
+- Mix conceptual, application-based, and tricky questions to reflect real exam standards and trends.
+- Distribute questions across important topics and difficulty levels (easy, medium, hard) as per the actual exam.
+- Each question should be clearly numbered and presented in a new paragraph.
+- Provide exactly 4 answer choices labeled (A), (B), (C), and (D), each on a separate line.
+- Indicate the correct answer immediately after each question, using this format: Answer: [Option Letter].
+- Do NOT include explanations, hints, or extra instructions—just the quiz.
+- Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+- Use only plain text math notation (e.g., x^2 for "x squared", sqrt(x) for square root).
+- Each question and its options should not exceed 5 lines total.
+- Begin the quiz with a centered heading: "${exam.toUpperCase()} – ${subject.toUpperCase()}${topic ? ` | Topic: ${topic}` : ''} | Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}"
+- Ensure the layout is clean, minimal, and optimized for PDF export.
+
+The overall difficulty level should be: ${difficulty || 'easy'}.
+`;
+
+  const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+  });
+
+  const generationConfig = {
+    temperature: 1,
+    topP: 0.95,
+    topK: 64,
+    responseMimeType: "text/plain",
+  };
+
+  const fullPrompt = papergene;
+
+  const chatSession = model.startChat({
+    generationConfig,
+    history: [
+      {
+        role: "user",
+        parts: [{ text: fullPrompt }],
+      },
+    ],
+  });
+
+  const result = await chatSession.sendMessage(fullPrompt);
+  return result.response.text();
+}
+
+
+
   const [showResult, setShowResult] = useState(false);
   const [customLoading, setCustomLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
-
-
-
-
-  const [input, setInput] = useState("");
-      const [recentPrompt, setRecentPrompt] = useState("");
-      const [previousPrompt, setPreviousPrompt] = useState([]);
-      const [loading, setLoading] = useState(false);
-      const [resultData, setResultData] = useState("");
-      const processResponse1 = (response) => {
-        setResultData(response);
-      };
-      const onSent6 = async (exam, sub, topic, difficulty, numQues) => {
-        setResultData("");
-        setLoading(true);
-        setShowResult(true);
-        let response;
-    
-        if (exam !== undefined) {
-          response = await run6(exam, sub, topic, difficulty, numQues);
-          setRecentPrompt(exam + " " + sub + " " + topic + " " + difficulty);
-        } else {
-          setPreviousPrompt(prev => [...prev, input]);
-          setRecentPrompt(input);
-          response = await run6(input);
-        }
-    
-        processResponse1(response);
-        setLoading(false);
-        setInput("");
-      };
-      async function run6(exam, sub, topic, difficulty, numquestions) {
-          const papergene = `
-      "Generate a well-structured, in-syllabus multiple-choice quiz for the ${exam} in the subject of ${sub}${topic ? `, specifically focusing on the topic : **${topic}**` : ''}.
-      The quiz must contain exactly ${numquestions} multiple-choice questions (MCQs), adhering strictly to the latest syllabus and question pattern of the exam.
-      Formatting and structure guidelines:
-      Each question should be clearly numbered.
-      Present the question text in a new paragraph.
-      Provide exactly 4 answer choices labeled (A), (B), (C), and (D), each on a separate line.
-      Leave a blank line between questions for readability.
-      Indicate the correct answer immediately after each question, using this format: Answer: [Option Letter].
-      Ensure that each question and its options are concise and do not exceed 5 lines total (to ensure proper formatting in PDF).
-      Do NOT include:
-      Explanations, hints, or additional instructions
-      Any content outside of the formatted quiz
-      Begin the quiz with a centered heading that clearly shows:
-      "${exam} – ${sub}${topic ? ` Topic: ${topic}` : ''}"
-      The overall difficulty level should be: ${difficulty || 'easy'}.
-      Ensure the layout is clean, minimal, and optimized for PDF export.
-      Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
-      Instead, use plain text math notation. For example:
-      Write x^2 for "x squared"
-      Write sqrt(x) for square root
-      Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
-      This ensures compatibility with plain text and PDF formats."
-      `;
-      
-          const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
-          const genAI = new GoogleGenerativeAI(apiKey);
-      
-          const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-          });
-      
-          const generationConfig = {
-            temperature: 1,
-            topP: 0.95,
-            topK: 64,
-            responseMimeType: "text/plain",
-          };
-      
-          const fullPrompt = papergene;
-      
-          const chatSession = model.startChat({
-            generationConfig,
-            history: [
-              {
-                role: "user",
-                parts: [{ text: fullPrompt }],
-              },
-            ],
-          });
-      
-          const result = await chatSession.sendMessage(fullPrompt);
-          return result.response.text();
-        }
-
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -257,7 +258,7 @@ const QuizNEET = () => {
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `NEET UG - ${subject.toUpperCase()}${topics ? ` - Topics: ${topics}` : ''} - Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
+      `${paperType.toUpperCase()} - ${subject.toUpperCase()}${topics ? ` - Topics: ${topics}` : ''} - Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`,
       margin,
       y
     );
@@ -291,7 +292,7 @@ const QuizNEET = () => {
       y += 5;
     });
 
-    pdf.save(`neetug_${subject}_quiz.pdf`);
+    pdf.save(`${paperType}_${subject}_quiz.pdf`);
   };
 
   let loadingMessage = '';
@@ -303,8 +304,20 @@ const QuizNEET = () => {
 
   return (
     <Container>
-      <Title>NEET Quiz Generator</Title>
+      <Title>Banking Quiz Generator</Title>
       <Form onSubmit={handleSubmit}>
+        <Field>
+          <Label htmlFor="paperType">Type of Paper:</Label>
+          <Select
+            id="paperType"
+            value={paperType}
+            onChange={(e) => setPaperType(e.target.value)}
+          >
+            {paperOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </Field>
         <Field>
           <Label htmlFor="subject">Subject:</Label>
           <Select
@@ -373,4 +386,4 @@ const QuizNEET = () => {
   );
 };
 
-export default QuizNEET;
+export default QuizBank;

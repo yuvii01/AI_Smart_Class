@@ -10,7 +10,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
+  padding: 40px 16px;
 `;
 
 const BlocksGrid = styled.div`
@@ -85,14 +85,36 @@ const Home = () => {
   const [showHome, setShowHome] = useState(false);
   const [selectedExam, setSelectedExam] = useState('');
   const navigate = useNavigate();
+
   const handleBlockClick = (block) => {
-      setSelectedExam(block); 
-      setShowHome(true);
-  };
-  if (showHome) {
-    const x = selectedExam.toLowerCase();
-    navigate(`/${x}`);
+  let path = '';
+  switch (block) {
+    case 'JEE':
+      path = '/jee';
+      break;
+    case 'NEET':
+      path = '/neet';
+      break;
+    case 'UPSC':
+      path = '/upsc';
+      break;
+    case 'NDA':
+      path = '/nda';
+      break;
+    case 'SSC':
+      path = '/ssc';
+      break;
+    case 'Railway Exams':
+      path = '/railway';
+      break;
+    case 'Banking Exams':
+      path = '/bank';
+      break;
+    default:
+      path = '/';
   }
+  navigate(path);
+};
 
   return (
     <Container>
@@ -101,6 +123,14 @@ const Home = () => {
         <Block onClick={() => handleBlockClick('JEE')}>JEE</Block>
         <Block onClick={() => handleBlockClick('NEET')}>NEET</Block>
         <Block onClick={() => handleBlockClick('UPSC')}>UPSC</Block>
+      </BlocksGrid>
+      <BlocksGrid>
+        <Block onClick={() => handleBlockClick('NDA')}>NDA</Block>
+        <Block onClick={() => handleBlockClick('SSC')}>SSC</Block>
+        <Block onClick={() => handleBlockClick('Railway Exams')}>Railway Exams</Block>
+      </BlocksGrid>
+      <BlocksGrid>
+        <Block onClick={() => handleBlockClick('Banking Exams')}>Banking Exams</Block>
       </BlocksGrid>
     </Container>
   );

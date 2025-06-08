@@ -5,10 +5,11 @@ import styled from 'styled-components';
 // import Quiz from '../quiz/Quiz';
 // import Revision from '../revision/Revision';
 // import CurrentAffairs from '../upsc/CurrentAffairs';
-import DoubtsJEE from './DoubtsJEE';
-import PaperJEE from './PaperJEE';
-import QuizJEE from './QuizJEE';
-import RevisionJEE from './RevisionJEE';
+import DoubtsJEE from './DoubtsNda';
+import PaperJEE from './PaperNda';
+import QuizJEE from './QuizNda';
+import RevisionJEE from './RevisionNda';
+import CurrentAffairs from './CurrentAffairs';
 
 // Styled Components
 // ...existing code...
@@ -120,30 +121,35 @@ const CloseBtn = styled.button`
   }
 `;
 
-const DivisionJEE = ({examType}) => {
+const DivisionNda = ({examType}) => {
   const [showDoubts, setShowDoubts] = useState(false);
   const [showPaper, setShowPaper] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
+  const [showCurrentAffairs, setShowCurrentAffairs] = useState(false);
 
    const openOnly = (setter) => {
     setShowDoubts(false);
     setShowPaper(false);
     setShowQuiz(false);
     setShowPlanner(false);
+    setShowCurrentAffairs(false);
     setter(true);
   };
 
   return (
     <Container>
       <Title>{examType ? `${examType} - ` : ''}
-        JEE - What would you like to do?</Title>
+        NDA - What would you like to do?</Title>
       <BoxGrid>
         <ActionBox onClick={() => openOnly(setShowPaper)}>
           📝<div style={{marginTop: 8}}>Paper Generator</div>
         </ActionBox>
         <ActionBox onClick={() => openOnly(setShowDoubts)}>
           ❓<div style={{marginTop: 8}}>Doubts</div>
+        </ActionBox>
+        <ActionBox onClick={() => openOnly(setShowCurrentAffairs)}>
+          ❓<div style={{marginTop: 8}}>Current Affairs Booster</div>
         </ActionBox>
         <ActionBox onClick={() => openOnly(setShowQuiz)}>
           🧠{examType === "UPSC" ? "Current Affairs Booster" : "Smart Quiz Generator"}
@@ -171,6 +177,13 @@ const DivisionJEE = ({examType}) => {
           
         </Popup>
       )}
+      {showCurrentAffairs && (
+        <Popup>
+          <CloseBtn onClick={() => setShowCurrentAffairs(false)}>✖</CloseBtn>
+          {/* <CurrentAffairs examType = {examType} /> */}
+          <CurrentAffairs />
+        </Popup>
+      )}
       {showPlanner && (
         <Popup>
           <CloseBtn onClick={() => setShowPlanner(false)}>✖</CloseBtn>
@@ -181,4 +194,4 @@ const DivisionJEE = ({examType}) => {
   );
 };
 
-export default DivisionJEE;
+export default DivisionNda;

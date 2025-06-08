@@ -2,6 +2,7 @@ import React, { useContext, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Context } from '../../context/context';
 import jsPDF from 'jspdf';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Container = styled.div`
   max-width: 400px;
@@ -120,11 +121,78 @@ const PaperNEET = () => {
   const [loadingStage, setLoadingStage] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
-  const {
-    onSent5,
-    loading,
-    resultData,
-  } = useContext(Context);
+  const [input, setInput] = useState("");
+        const [recentPrompt, setRecentPrompt] = useState("");
+        const [previousPrompt, setPreviousPrompt] = useState([]);
+        const [loading, setLoading] = useState(false);
+        const [resultData, setResultData] = useState("");
+        const processResponse1 = (response) => {
+        setResultData(response);
+      };
+    const onSent5 = async (exam, sub, num) => {
+        setResultData("");
+        setLoading(true);
+        setShowResult(true);
+        let response;
+    
+        if (exam !== undefined) {
+          response = await run5(exam, sub, num);
+          setRecentPrompt(exam + " " + sub + " " + num);
+        } else {
+          setPreviousPrompt(prev => [...prev, input]);
+          setRecentPrompt(input);
+          response = await run5(input);
+        }
+    
+        processResponse1(response);
+        setLoading(false);
+        setInput("");
+      };
+    async function run5(exam, sub, num) {
+        const papergene = `
+      Generate an exam paper for the ${exam} in the subject of ${sub}. The paper should begin with a heading that clearly displays the exam and subject names. Below the heading, list exactly ${num} unique and relevant questions that test a range of concepts and difficulty levels appropriate for this subject. Each question should be clearly numbered and separated by one blank line for readability. Do not include answers or additional instructions—just the heading and the questions.
+      Do NOT use LaTeX formatting or special symbols like $, \\frac, \\int, or superscripts/subscripts.
+    
+    Instead, use plain text math notation. For example:
+    
+    Write x^2 for "x squared"
+    
+    Write sqrt(x) for square root
+    
+    Write integral from 0 to x of 1 / (1 + t^4) dt instead of LaTeX expressions
+    
+    This ensures compatibility with plain text and PDF formats."
+    `;
+    
+        const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
+        const genAI = new GoogleGenerativeAI(apiKey);
+    
+        const model = genAI.getGenerativeModel({
+          model: "gemini-1.5-flash",
+        });
+    
+        const generationConfig = {
+          temperature: 1,
+          topP: 0.95,
+          topK: 64,
+          responseMimeType: "text/plain",
+        };
+    
+        const fullPrompt = papergene;
+    
+        const chatSession = model.startChat({
+          generationConfig,
+          history: [
+            {
+              role: "user",
+              parts: [{ text: fullPrompt }],
+            },
+          ],
+        });
+    
+        const result = await chatSession.sendMessage(fullPrompt);
+        return result.response.text();
+      }
 
   const resultRef = useRef();
 

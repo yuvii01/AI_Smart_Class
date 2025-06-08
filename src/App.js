@@ -22,6 +22,10 @@ import PaperUPSC from './components/upsc/PaperUPSC';
 import DoubtsUPSC from './components/upsc/DoubtsUPSC';
 import RevisionUPSC from './components/upsc/RevisionUPSC';
 import Home from './Home/Home';
+import DivisionNda from './components/nda/DivisionNda';
+import DivisionRail from './components/railway/DivisionRail';
+import DivisionSSC from './components/ssc/DivisionSSC';
+import DivisionBanking from './components/banking/DivisionBanking';
 
 const App = () => {
   return (
@@ -43,6 +47,10 @@ const App = () => {
         <Route path="/upsc/current_affairs" element={<CurrentAffairs/>} />
         <Route path="/upsc/doubts" element={<DoubtsUPSC />} />
         <Route path="/upsc/revision" element={<RevisionUPSC />} />
+        <Route path="/nda" element={<DivisionNda />} />
+        <Route path="/railway" element={<DivisionRail />} />
+        <Route path="/ssc" element={<DivisionSSC />} />
+        <Route path="/bank" element={<DivisionBanking />} />
       </Routes>
     </Router>
   );

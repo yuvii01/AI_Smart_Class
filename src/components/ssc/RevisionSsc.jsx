@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 import jsPDF from 'jspdf';
-// import { Context } from '../../context/context';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Context } from '../../context/context';
 
 const Container = styled.div`
   max-width: 400px;
@@ -119,19 +119,20 @@ const DownloadBtn = styled.button`
   }
 `;
 
-// UPSC subjects only
-const subjectOptions = [
-  { value: "history", label: "History" },
-  { value: "geography", label: "Geography" },
-  { value: "polity", label: "Polity" },
-  { value: "economics", label: "Economics" },
-  { value: "science", label: "Science" },
-  { value: "environment", label: "Environment" },
-  { value: "current affairs", label: "Current Affairs" },
-  { value: "all", label: "All Subjects" },
+const paperOptions = [
+  { value: "jeemains", label: "JEE Mains" },
+  { value: "jeeadvanced", label: "JEE Advanced" },
 ];
 
-const RevisionUPSC = () => {
+const subjectOptions = [
+  { value: "physics", label: "Physics" },
+  { value: "chemistry", label: "Chemistry" },
+  { value: "maths", label: "Maths" },
+  { value: "all", label: "All (Physics, Chemistry, Maths)" },
+];
+
+const RevisionJEE = () => {
+  const [paperType, setPaperType] = useState('jeemains');
   const [subject, setSubject] = useState('');
   const [topic, setTopic] = useState('');
   const [showResult, setShowResult] = useState(false);
@@ -167,6 +168,7 @@ const RevisionUPSC = () => {
         };
         async function run7(exam, sub, topic) {
             const papergene = `
+            You are an expert question setter for Indian SSC (Staff Selection Commission) competitive examinations (such as SSC CGL, SSC CHSL, SSC MTS, etc.).
         Generate the best possible, chapter-wise detailed revision notes for the ${exam} in the subject of ${sub}${topic ? `, specifically focusing on the topic: ${topic}` : ''}. 
         Begin with a clear heading that displays the exam and subject${topic ? ` and topic` : ''} names. 
         Organize the notes chapter-wise, with each chapter or major concept as a separate section. 
@@ -229,7 +231,7 @@ const RevisionUPSC = () => {
     setTimeout(() => {
       setCustomLoading(false);
       setShowResult(true);
-      onSent7("upsc", subject, topic);
+      onSent7(paperType, subject, topic);
     }, 16000);
   };
 
@@ -248,7 +250,7 @@ const RevisionUPSC = () => {
     // Add heading
     pdf.setFontSize(16);
     pdf.text(
-      `UPSC${subject ? ` - Subject: ${subject}` : ''}${topic ? ` - Topic: ${topic}` : ''}`,
+      `${paperType.toUpperCase()}${subject ? ` - Subject: ${subject}` : ''}${topic ? ` - Topic: ${topic}` : ''}`,
       margin,
       y
     );
@@ -282,7 +284,7 @@ const RevisionUPSC = () => {
       y += 5;
     });
 
-    pdf.save(`upsc_revision_plan.pdf`);
+    pdf.save(`${paperType}_revision_plan.pdf`);
   };
 
   let loadingMessage = '';
@@ -294,8 +296,20 @@ const RevisionUPSC = () => {
 
   return (
     <Container>
-      <Title>UPSC Revision Planner</Title>
+      <Title>JEE Revision Planner</Title>
       <Form onSubmit={handleSubmit}>
+        <Field>
+          <Label htmlFor="paperType">Type of Paper:</Label>
+          <Select
+            id="paperType"
+            value={paperType}
+            onChange={(e) => setPaperType(e.target.value)}
+          >
+            {paperOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </Select>
+        </Field>
         <Field>
           <Label htmlFor="subject">Subject:</Label>
           <Select
@@ -339,4 +353,4 @@ const RevisionUPSC = () => {
   );
 };
 
-export default RevisionUPSC;
+export default RevisionJEE;
