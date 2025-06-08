@@ -2,6 +2,7 @@ import React, { useContext, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Context } from '../../context/context';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import jsPDF from "jspdf";
 
 const Container = styled.div`
   max-width: 340px;
@@ -353,6 +354,23 @@ This ensures compatibility with plain text and PDF formats.
             return result.response.text();
           }
 
+           const handleDownloadPDF = () => {
+    if (!resultData) return;
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "pt",
+      format: "a4"
+    });
+    const lines = doc.splitTextToSize(resultData, 500);
+    doc.setFont("times", "normal");
+    doc.setFontSize(13);
+    doc.text(lines, 40, 60);
+    doc.save(
+      `${upscExam || "UPSC"}_${upscSubject || "Paper"}_${upscPaperType || "Type"}.pdf`
+    );
+  };
+
+
   const resultRef = useRef();
 
   // Custom loading sequence
@@ -457,14 +475,14 @@ This ensures compatibility with plain text and PDF formats.
         ) : showResult && loading ? (
           <Loading>Thinking...</Loading>
         ) : showResult && resultData ? (
-          <Loading>Paper generated! You can now download the PDF.</Loading>
+          <>
+            <div style={{ whiteSpace: "pre-wrap" }}>{resultData}</div>
+            <DownloadBtn onClick={handleDownloadPDF}>
+              Download PDF
+            </DownloadBtn>
+          </>
         ) : null}
       </Result>
-      {/* {showResult && resultData && !loading && (
-        <DownloadBtn onClick={handleDownloadPDF}>
-          Download PDF
-        </DownloadBtn>
-      )} */}
     </Container>
   );
 };
