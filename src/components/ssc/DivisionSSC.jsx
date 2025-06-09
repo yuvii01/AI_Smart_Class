@@ -121,7 +121,10 @@ const CloseBtn = styled.button`
   }
 `;
 
+
+
 const DivisionSSC = ({examType}) => {
+  console.log("Exam Type:", examType);
   const [showDoubts, setShowDoubts] = useState(false);
   const [showPaper, setShowPaper] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -160,7 +163,7 @@ const DivisionSSC = ({examType}) => {
       {showDoubts && (
         <Popup>
           <CloseBtn onClick={() => setShowDoubts(false)}>✖</CloseBtn>
-          <DoubtsJEE examType = {examType}/>
+          <DoubtsJEE examType = 'SSC'/>
         </Popup>
       )}
       {showPaper && (

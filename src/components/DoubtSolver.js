@@ -247,6 +247,101 @@ const DoubtSolver = ({ subject, examType }) => {
     setInput("");
   };
 
+
+  const onSent5 = async (prompt, examType) => {
+    setResultData("");
+    setLoading(true);
+    setShowResult(true);
+    let response;
+
+    if (prompt !== undefined ) {
+      response = await run5(prompt);
+      setRecentPrompt(prompt);
+    }
+    else {
+      setPreviousPrompt(prev => [...prev, input]);
+      setRecentPrompt(input);
+      response = await run5(input);
+    }
+
+    processResponse(response);
+    setLoading(false);
+    setInput("");
+  };
+  const onSent6 = async (prompt, examType) => {
+    setResultData("");
+    setLoading(true);
+    setShowResult(true);
+    let response;
+
+    if (prompt !== undefined ) {
+      response = await run6(prompt);
+      setRecentPrompt(prompt);
+    }
+    else {
+      setPreviousPrompt(prev => [...prev, input]);
+      setRecentPrompt(input);
+      response = await run6(input);
+    }
+
+    processResponse(response);
+    setLoading(false);
+    setInput("");
+  };
+  const onSent7 = async (prompt, examType) => {
+    setResultData("");
+    setLoading(true);
+    setShowResult(true);
+    let response;
+
+    if (prompt !== undefined ) {
+      response = await run7(prompt);
+      setRecentPrompt(prompt);
+    }
+    else {
+      setPreviousPrompt(prev => [...prev, input]);
+      setRecentPrompt(input);
+      response = await run7(input);
+    }
+
+    processResponse(response);
+    setLoading(false);
+    setInput("");
+  };
+  const onSent8 = async (prompt, examType) => {
+    setResultData("");
+    setLoading(true);
+    setShowResult(true);
+    let response;
+
+    if (prompt !== undefined ) {
+      response = await run8(prompt);
+      setRecentPrompt(prompt);
+    }
+    else {
+      setPreviousPrompt(prev => [...prev, input]);
+      setRecentPrompt(input);
+      response = await run8(input);
+    }
+
+    processResponse(response);
+    setLoading(false);
+    setInput("");
+  };
+
+  const UpscSystemPrompt = `
+You are an expert UPSC teacher with deep knowledge in all UPSC examination subjects, including General Studies, Current Affairs, and Optional Subjects.
+
+Your role is to solve any doubt or question related to the UPSC exam, specifically for the subject: ${subject}.
+- Provide clear, concise, and accurate explanations suitable for UPSC aspirants.
+- Avoid using LaTeX or mathematical markup in your answers; use plain text only.
+- Structure your response in simple, easy-to-understand language.
+- If the question is conceptual, provide relevant examples, facts, or context as needed.
+- If the question is factual, cite the most recent and reliable information.
+- Always keep the answer focused on the UPSC syllabus and exam requirements. `;
+
+
+
     const systemPrompt = `
 You are an expert JEE Advanced Chemistry teacher with deep knowledge in Organic, Inorganic, and Physical Chemistry.
 Your role is to solve high-level, complex Chemistry problems typically asked in JEE Advanced.
@@ -314,6 +409,45 @@ Use proper scientific terminology (e.g., photosynthesis, DNA replication, acetyl
 Clarify conceptual traps and provide illustrations or structured breakdowns when required.
 Ensure your explanations support NEET 2024 aspirants aiming for top scores.
 `;
+  // SSC System Prompt
+const SSCSystemPrompt = (subject) => `
+You are an expert SSC (Staff Selection Commission) exam teacher with deep knowledge in all SSC examination subjects, including General Awareness, Quantitative Aptitude, Reasoning, and English.
+
+Your role is to solve any doubt or question related to the SSC exam, specifically for the subject: ${subject}.
+- Provide clear, concise, and accurate explanations suitable for SSC aspirants.
+- Avoid using LaTeX or mathematical markup in your answers; use plain text only.
+- Structure your response in simple, easy-to-understand language.
+- If the question is conceptual, provide relevant examples, facts, or context as needed.
+- If the question is factual, cite the most recent and reliable information.
+- Always keep the answer focused on the SSC syllabus and exam requirements.
+`;
+
+// Railway System Prompt
+const RailwaySystemPrompt = (subject) => `
+You are an expert Railway Recruitment exam teacher with deep knowledge in all RRB (Railway Recruitment Board) examination subjects, including General Awareness, Mathematics, Reasoning, and Technical/Trade subjects.
+
+Your role is to solve any doubt or question related to Railway exams, specifically for the subject: ${subject}.
+- Provide clear, concise, and accurate explanations suitable for Railway exam aspirants.
+- Avoid using LaTeX or mathematical markup in your answers; use plain text only.
+- Structure your response in simple, easy-to-understand language.
+- If the question is conceptual, provide relevant examples, facts, or context as needed.
+- If the question is factual, cite the most recent and reliable information.
+- Always keep the answer focused on the Railway exam syllabus and requirements.
+`;
+
+// NDA System Prompt
+const NdaSystemPrompt = (subject) => `
+You are an expert NDA (National Defence Academy) exam teacher with deep knowledge in all NDA examination subjects, including Mathematics, General Ability, English, and Science.
+
+Your role is to solve any doubt or question related to the NDA exam, specifically for the subject: ${subject}.
+- Provide clear, concise, and accurate explanations suitable for NDA aspirants.
+- Avoid using LaTeX or mathematical markup in your answers; use plain text only.
+- Structure your response in simple, easy-to-understand language.
+- If the question is conceptual, provide relevant examples, facts, or context as needed.
+- If the question is factual, cite the most recent and reliable information.
+- Always keep the answer focused on the NDA syllabus and exam requirements.
+`;
+
 
   async function run1(prompt) {
     const apiKey = "AIzaSyDh1bDehR9jzy1wT-kkgAGQ9TlQUkXlE80";
@@ -465,6 +599,8 @@ Ensure your explanations support NEET 2024 aspirants aiming for top scores.
     return result.response.text();
   }
 
+
+
   async function run4(prompt) {
     const apiKey = "AIzaSyCQwPUode3Z9u51LVqSKr0FpsIN4FNfdvA";
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -495,8 +631,124 @@ Ensure your explanations support NEET 2024 aspirants aiming for top scores.
     return result.response.text();
   } 
 
-   
+    async function run5(prompt) {
+    const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+    const genAI = new GoogleGenerativeAI(apiKey);
 
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-preview-05-20",
+    });
+
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      responseMimeType: "text/plain",
+    };
+    const fullPrompt = `${UpscSystemPrompt}\n\n${prompt}`;
+
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [
+        {
+          role: "user",
+          parts: [{ text: fullPrompt }],
+        },
+      ],
+    });
+
+    const result = await chatSession.sendMessage(fullPrompt);
+    return result.response.text();
+  }
+
+  async function run6(prompt) {
+    const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-preview-05-20",
+    });
+
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      responseMimeType: "text/plain",
+    };
+    const fullPrompt = `${SSCSystemPrompt}\n\n${prompt}`;
+
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [
+        {
+          role: "user",
+          parts: [{ text: fullPrompt }],
+        },
+      ],
+    });
+
+    const result = await chatSession.sendMessage(fullPrompt);
+    return result.response.text();
+  }
+  async function run7(prompt) {
+    const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-preview-05-20",
+    });
+
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      responseMimeType: "text/plain",
+    };
+    const fullPrompt = `${RailwaySystemPrompt}\n\n${prompt}`;
+
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [
+        {
+          role: "user",
+          parts: [{ text: fullPrompt }],
+        },
+      ],
+    });
+
+    const result = await chatSession.sendMessage(fullPrompt);
+    return result.response.text();
+  }
+
+  async function run8(prompt) {
+    const apiKey = "AIzaSyDvIoMSFQfWP5i0njGagatlUg1ctr3tyf8";
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash-preview-05-20",
+    });
+
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      responseMimeType: "text/plain",
+    };
+    const fullPrompt = `${NdaSystemPrompt}\n\n${prompt}`;
+
+    const chatSession = model.startChat({
+      generationConfig,
+      history: [
+        {
+          role: "user",
+          parts: [{ text: fullPrompt }],
+        },
+      ],
+    });
+
+    const result = await chatSession.sendMessage(fullPrompt);
+    return result.response.text();
+  }
 
   useEffect(() => {
     setInput('');
@@ -514,6 +766,19 @@ Ensure your explanations support NEET 2024 aspirants aiming for top scores.
     } else if (subject === "Biology") {
       onSent4(input, examType);
     }
+    else if(examType === "UPSC"){
+      onSent5(input, examType);
+    }
+    else if(examType === "SSC"){
+      onSent6(input, examType);
+    }
+    else if(examType === "Railway"){
+      onSent7(input, examType);
+    }
+    else if(examType === "NDA"){
+      onSent8(input, examType);
+    }
+
   };
 
   return (

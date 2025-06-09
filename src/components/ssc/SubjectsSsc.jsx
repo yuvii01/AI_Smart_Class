@@ -31,11 +31,19 @@ const SubjectBox = styled.div`
   }
 `;
 
-const jeeSubjects = ["Physics", "Chemistry", "Maths"];
+const sscSubjects = [
+  "General Intelligence & Reasoning",
+  "General Awareness",
+  "Quantitative Aptitude",
+  "English Language",
+  "General Science",
+  "Current Affairs",
+  "Computer Knowledge"
+];
 
-const SubjectsJEE = ({ onSelectSubject }) => (
+const SubjectsSSC = ({ onSelectSubject }) => (
   <SubjectBoxesWrapper>
-    {jeeSubjects.map((subject) => (
+    {sscSubjects.map((subject) => (
       <SubjectBox
         key={subject}
         onClick={() => onSelectSubject(subject)}
@@ -46,4 +54,4 @@ const SubjectsJEE = ({ onSelectSubject }) => (
   </SubjectBoxesWrapper>
 );
 
-export default SubjectsJEE;
+export default SubjectsSSC;

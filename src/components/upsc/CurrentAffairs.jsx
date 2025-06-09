@@ -158,43 +158,63 @@ const EmptyMsg = styled.div`
 `;
 
 // --- API CALL FUNCTIONS ---
-const API_KEY = "8e14109d2d6c4fe3a7010bd628924afa";
-const API_URL = "https://newsapi.org/v2/everything";
+const API_KEY = "e9ea544e7c267495c9c65ff1b09b5fbf"; 
+const API_URL = "http://api.mediastack.com/v1/news";
 
+
+//http://api.mediastack.com/v1/news?access_key=e9ea544e7c267495c9c65ff1b09b5fbf&categories=technology,science&languages=en
 // Fetch news from API and return in required JSON format
 async function runFetchNews({ topic = "", search = "", page = 1, pageSize = 10 }) {
   let url = "";
-
+  // Build Guardian API URL for all cases
   if (topic && search) {
-    url = `${API_URL}?apiKey=${API_KEY}&q=${encodeURIComponent(topic + " " + search)}&page=${page}&pageSize=${pageSize}&language=en&sortBy=publishedAt`;
+    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(topic + " AND " + search)}&page-size=${pageSize}&page=${page}&api-key=test`;
   } else if (topic) {
-    url = `${API_URL}?apiKey=${API_KEY}&q=${encodeURIComponent(topic)}&page=${page}&pageSize=${pageSize}&language=en&sortBy=publishedAt`;
+    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(topic)}&page-size=${pageSize}&page=${page}&api-key=test`;
+    console.log("Fetching topic:", url);
   } else if (search) {
-    url = `${API_URL}?apiKey=${API_KEY}&q=${encodeURIComponent(search)}&page=${page}&pageSize=${pageSize}&language=en&sortBy=publishedAt`;
+    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(search)}&page-size=${pageSize}&page=${page}&api-key=test`;
   } else {
-    url = `${API_URL}?apiKey=${API_KEY}&q=${encodeURIComponent(
-      'government schemes OR indian economy OR polity OR governance OR environment OR ecology OR "social issues" OR "science and technology" OR "international relations" OR "global events" OR "international organizations" OR "india foreign policy" OR "global economy" OR "international reports" OR "international treaties" OR "climate summit"'
-    )}&page=${page}&pageSize=${pageSize}&language=en&sortBy=publishedAt`;
+    // Daily news: add Indian context and UPSC-relevant tags to the query
+    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(
+      'india OR indian-government OR upsc OR nta OR schemes OR policy OR economy OR environment OR science OR technology OR international OR governance OR social issues OR current affairs OR news OR "daily news" OR "current events" OR "latest updates" OR "government schemes" OR "international relations" OR "science and technology" OR "environmental issues" OR "economic policies" OR "social issues" OR "governance reforms" OR "upsc preparation" OR "nta exams"'
+    )}&page-size=${pageSize}&page=${page}&api-key=test`;
+    console.log("Fetching daily news:", url);
   }
 
   const res = await fetch(url);
   const data = await res.json();
-  if (data.articles) {
-    return data.articles.map((item, idx) => ({
-      id: item.url || idx + Math.random(),
-      date: item.publishedAt ? item.publishedAt.slice(0, 10) : "",
-      title: item.title,
-      summary: item.description || "",
-      tags: topic ? [topic] : [],
-      source: item.url,
-      image: item.urlToImage || "",
+
+  if (data.response && data.response.results) {
+    return data.response.results.map((item, idx) => ({
+      id: item.id || idx + Math.random(),
+      date: item.webPublicationDate ? item.webPublicationDate.slice(0, 10) : "",
+      title: item.webTitle,
+      summary: "", // Guardian API does not provide summary/description
+      tags: [
+        item.sectionName,
+        // Add UPSC-relevant tags based on title/section for daily news
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("government") ? ["Government"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("policy") ? ["Policy"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("economy") ? ["Economy"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("environment") ? ["Environment"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("science") ? ["Science & Tech"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("technology") ? ["Science & Tech"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("international") ? ["International"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("india") ? ["India"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("governance") ? ["Governance"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("schemes") ? ["Schemes"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("social") ? ["Social Issues"] : []),
+        ...(item.webTitle && item.webTitle.toLowerCase().includes("upsc") ? ["UPSC"] : []),
+      ],
+      source: item.webUrl,
+      image: "", // Guardian API search does not provide image
       relevance: [],
     }));
   }
   return [];
 }
 
-// --- MAIN COMPONENT ---
 const CurrentAffairs = () => {
   const [tab, setTab] = useState("daily");
   const [topic, setTopic] = useState("");
