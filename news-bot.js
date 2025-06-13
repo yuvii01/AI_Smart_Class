@@ -16,7 +16,7 @@ const DB_NAME = "newsbot";
 const COLLECTION_NAME = "news";
 
 const API_KEY = "8e14109d2d6c4fe3a7010bd628924afa";
-const API_URL = "https://newsapi.org/v2/everything";
+const API_URL = "http://newsapi.org/v2/everything";
 const PORT = 4000;
 
 // List of UPSC-relevant topics to cache (as an array)
