@@ -13,7 +13,7 @@ const TOPICS = [
   "Social Issues",
 ];
 
-// Styled Components
+// Styled Components (same as before)
 const Wrapper = styled.div`
   max-width: 700px;
   margin: 32px auto;
@@ -62,6 +62,7 @@ const NewsCard = styled.div`
   flex-direction: column;
   gap: 6px;
   position: relative;
+  cursor: pointer;
 `;
 
 const Title = styled.div`
@@ -70,7 +71,7 @@ const Title = styled.div`
   color: #174ea6;
 `;
 
-const Date = styled.div`
+const DateTag = styled.div`
   font-size: 0.95rem;
   color: #888;
 `;
@@ -158,63 +159,62 @@ const EmptyMsg = styled.div`
 `;
 
 // --- API CALL FUNCTIONS ---
-const API_KEY = "e9ea544e7c267495c9c65ff1b09b5fbf"; 
-const API_URL = "http://api.mediastack.com/v1/news";
 
-
-//http://api.mediastack.com/v1/news?access_key=e9ea544e7c267495c9c65ff1b09b5fbf&categories=technology,science&languages=en
-// Fetch news from API and return in required JSON format
+// Fetch news from local news-bot server (MongoDB backend)
 async function runFetchNews({ topic = "", search = "", page = 1, pageSize = 10 }) {
-  let url = "";
-  // Build Guardian API URL for all cases
-  if (topic && search) {
-    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(topic + " AND " + search)}&page-size=${pageSize}&page=${page}&api-key=test`;
-  } else if (topic) {
-    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(topic)}&page-size=${pageSize}&page=${page}&api-key=test`;
-    console.log("Fetching topic:", url);
+  let url = "http://localhost:4000/news";
+  let filter = null;
+
+  // For topic tab, fetch by topic
+  if (topic) {
+    url += `?topic=${encodeURIComponent(topic.toLowerCase())}`;
   } else if (search) {
-    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(search)}&page-size=${pageSize}&page=${page}&api-key=test`;
+    // If search is not empty, return null to indicate Gemini should be called
+    if (search.trim() !== "") {
+      return null; // Special flag for Gemini
+    }
+    // If search is empty, show daily news
+    url += `?topic=daily`;
   } else {
-    // Daily news: add Indian context and UPSC-relevant tags to the query
-    url = `https://content.guardianapis.com/search?q=${encodeURIComponent(
-      'india OR indian-government OR upsc OR nta OR schemes OR policy OR economy OR environment OR science OR technology OR international OR governance OR social issues OR current affairs OR news OR "daily news" OR "current events" OR "latest updates" OR "government schemes" OR "international relations" OR "science and technology" OR "environmental issues" OR "economic policies" OR "social issues" OR "governance reforms" OR "upsc preparation" OR "nta exams"'
-    )}&page-size=${pageSize}&page=${page}&api-key=test`;
-    console.log("Fetching daily news:", url);
+    // For daily news, fetch daily section
+    url += `?topic=daily`;
   }
 
   const res = await fetch(url);
-  const data = await res.json();
+  let data = await res.json();
 
-  if (data.response && data.response.results) {
-    return data.response.results.map((item, idx) => ({
-      id: item.id || idx + Math.random(),
-      date: item.webPublicationDate ? item.webPublicationDate.slice(0, 10) : "",
-      title: item.webTitle,
-      summary: "", // Guardian API does not provide summary/description
-      tags: [
-        item.sectionName,
-        // Add UPSC-relevant tags based on title/section for daily news
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("government") ? ["Government"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("policy") ? ["Policy"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("economy") ? ["Economy"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("environment") ? ["Environment"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("science") ? ["Science & Tech"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("technology") ? ["Science & Tech"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("international") ? ["International"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("india") ? ["India"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("governance") ? ["Governance"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("schemes") ? ["Schemes"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("social") ? ["Social Issues"] : []),
-        ...(item.webTitle && item.webTitle.toLowerCase().includes("upsc") ? ["UPSC"] : []),
-      ],
-      source: item.webUrl,
-      image: "", // Guardian API search does not provide image
-      relevance: [],
-    }));
-  }
-  return [];
+  // Pagination (client-side, since all data is local)
+  const paged = data.slice((page - 1) * pageSize, page * pageSize);
+
+  // Map to your display format
+  return paged.map((item, idx) => ({
+    id: item.url || idx + Math.random(),
+    date: item.publishedAt ? item.publishedAt.slice(0, 10) : "",
+    title: item.title,
+    summary: item.description || "",
+    tags: [
+      ...(topic ? [topic] : []),
+      ...(item.title && item.title.toLowerCase().includes("government") ? ["Government"] : []),
+      ...(item.title && item.title.toLowerCase().includes("policy") ? ["Policy"] : []),
+      ...(item.title && item.title.toLowerCase().includes("economy") ? ["Economy"] : []),
+      ...(item.title && item.title.toLowerCase().includes("environment") ? ["Environment"] : []),
+      ...(item.title && item.title.toLowerCase().includes("science") ? ["Science & Tech"] : []),
+      ...(item.title && item.title.toLowerCase().includes("technology") ? ["Science & Tech"] : []),
+      ...(item.title && item.title.toLowerCase().includes("international") ? ["International"] : []),
+      ...(item.title && item.title.toLowerCase().includes("india") ? ["India"] : []),
+      ...(item.title && item.title.toLowerCase().includes("governance") ? ["Governance"] : []),
+      ...(item.title && item.title.toLowerCase().includes("schemes") ? ["Schemes"] : []),
+      ...(item.title && item.title.toLowerCase().includes("social") ? ["Social Issues"] : []),
+      ...(item.title && item.title.toLowerCase().includes("upsc") ? ["UPSC"] : []),
+    ],
+    source: item.url,
+    image: item.urlToImage || item.urlToimage || item.image || "",
+    relevance: [],
+    content: item.content || "",
+  }));
 }
 
+// --- FETCH NEWS FUNCTION ---
 const CurrentAffairs = () => {
   const [tab, setTab] = useState("daily");
   const [topic, setTopic] = useState("");
@@ -233,11 +233,18 @@ const CurrentAffairs = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
 
   // --- FETCH NEWS FUNCTION ---
   const onSent = async ({ topic = "", search = "", page = 1 }) => {
     setLoading(true);
-    const data = await runFetchNews({ topic, search, page, pageSize: 10 });
+
+    let data = await runFetchNews({ topic, search, page, pageSize: 10 });
+    // If data is null, it means we need to call Gemini for the search query
+    if (data === null && search.trim() !== "") {
+      // You can add Gemini search logic here if needed
+      data = [];
+    }
     setLoading(false);
     return data;
   };
@@ -331,23 +338,27 @@ const CurrentAffairs = () => {
         {loading && <EmptyMsg>Loading...</EmptyMsg>}
         {!loading && filteredNews.length === 0 && <EmptyMsg>No news found.</EmptyMsg>}
         {filteredNews.map(item => (
-          <NewsCard key={item.id} style={revised.includes(item.id) ? { opacity: 0.5 } : {}}>
+          <NewsCard
+            key={item.id}
+            style={revised.includes(item.id) ? { opacity: 0.5 } : {}}
+            onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+          >
             {item.image && (
-  <img
-    src={item.image}
-    alt={item.title}
-    style={{
-      width: "100%",
-      height: "180px", // Set a fixed height for the rectangle
-      objectFit: "cover", // Ensures the image covers the area
-      objectPosition: "center", // Centers the image
-      borderRadius: "8px",
-      display: "block",
-      marginBottom: "8px"
-    }}
-  />
-)}
-            <Date>{item.date}</Date>
+              <img
+                src={item.image}
+                alt={item.title}
+                style={{
+                  width: "100%",
+                  height: "180px",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  borderRadius: "8px",
+                  display: "block",
+                  marginBottom: "8px"
+                }}
+              />
+            )}
+            <DateTag>{item.date}</DateTag>
             <Title>{item.title}</Title>
             <Summary>{item.summary}</Summary>
             <Tags>
@@ -365,21 +376,38 @@ const CurrentAffairs = () => {
             )}
             <BookmarkBtn
               bookmarked={bookmarks.includes(item.id)}
-              onClick={() => toggleBookmark(item.id)}
+              onClick={e => {
+                e.stopPropagation();
+                toggleBookmark(item.id);
+              }}
               title={bookmarks.includes(item.id) ? "Remove Bookmark" : "Bookmark"}
             >
               {bookmarks.includes(item.id) ? "★" : "☆"}
             </BookmarkBtn>
             {tab === "bookmarks" && (
               revised.includes(item.id) ? (
-                <MarkRevisedBtn onClick={() => unmarkRevised(item.id)}>
+                <MarkRevisedBtn onClick={e => { e.stopPropagation(); unmarkRevised(item.id); }}>
                   Unmark as Revised
                 </MarkRevisedBtn>
               ) : (
-                <MarkRevisedBtn onClick={() => markAsRevised(item.id)}>
+                <MarkRevisedBtn onClick={e => { e.stopPropagation(); markAsRevised(item.id); }}>
                   Mark as Revised
                 </MarkRevisedBtn>
               )
+            )}
+            {/* Show full content if expanded */}
+            {expandedId === item.id && item.content && (
+              <div style={{
+                background: "#f3f6fa",
+                borderRadius: 8,
+                marginTop: 10,
+                padding: 12,
+                color: "#222",
+                fontSize: "1rem",
+                whiteSpace: "pre-line"
+              }}>
+                {item.content}
+              </div>
             )}
           </NewsCard>
         ))}
