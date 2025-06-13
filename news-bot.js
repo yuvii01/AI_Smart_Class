@@ -127,37 +127,37 @@ cron.schedule("0 * * * *", fetchAllTopicsNews);
 fetchAllTopicsNews();
 
 // Serve cached news for a topic or all topics
-app.get("/news", async (req, res) => {
-  const client = new MongoClient(MONGO_URI);
-  try {
-    await client.connect();
-    const db = client.db(DB_NAME);
-    const collection = db.collection(COLLECTION_NAME);
-    const { topic } = req.query;
-    if (topic) {
-      const t = topic.toLowerCase();
-      const doc = await collection.findOne({ topic: t });
-      if (doc && doc.articles) {
-        res.json(doc.articles);
-      } else {
-        res.json([]);
-      }
-    } else {
-      // Return all topics as an object (like the old JSON file)
-      const docs = await collection.find({}).toArray();
-      const allNews = {};
-      docs.forEach(doc => {
-        allNews[doc.topic] = doc.articles;
-      });
-      res.json(allNews);
-    }
-  } catch (err) {
-    res.status(500).json({ error: "Database error", details: err.message });
-  } finally {
-    await client.close();
-  }
-});
+// app.get("/news", async (req, res) => {
+//   const client = new MongoClient(MONGO_URI);
+//   try {
+//     await client.connect();
+//     const db = client.db(DB_NAME);
+//     const collection = db.collection(COLLECTION_NAME);
+//     const { topic } = req.query;
+//     if (topic) {
+//       const t = topic.toLowerCase();
+//       const doc = await collection.findOne({ topic: t });
+//       if (doc && doc.articles) {
+//         res.json(doc.articles);
+//       } else {
+//         res.json([]);
+//       }
+//     } else {
+//       // Return all topics as an object (like the old JSON file)
+//       const docs = await collection.find({}).toArray();
+//       const allNews = {};
+//       docs.forEach(doc => {
+//         allNews[doc.topic] = doc.articles;
+//       });
+//       res.json(allNews);
+//     }
+//   } catch (err) {
+//     res.status(500).json({ error: "Database error", details: err.message });
+//   } finally {
+//     await client.close();
+//   }
+// });
 
-app.listen(PORT, () => {
-  console.log(`News bot running at http://localhost:${PORT}/news`);
-});
+// app.listen(PORT, () => {
+//   console.log(`News bot running at http://localhost:${PORT}/news`);
+// });
