@@ -27,6 +27,9 @@
     "styled-components": "^6.1.18",
     "web-vitals": "^2.1.4"
   },
+  "engines": {
+  "node": "18.x"
+},
   "scripts": {
     "start": "concurrently \"node news-bot.js\" \"npm run react-start\"",
     "react-start": "react-scripts start",
