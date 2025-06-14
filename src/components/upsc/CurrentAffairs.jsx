@@ -160,9 +160,17 @@ const EmptyMsg = styled.div`
 
 // --- API CALL FUNCTIONS ---
 
+
+
+
+// Replace with your actual Atlas connection string and credentials
+const MONGO_URI = "mongodb+srv://yuvrajmaheshwari07:<db_password>@cluster0.wzqk21t.mongodb.net/newsbot?retryWrites=true&w=majority";
+const DB_NAME = "newsbot";
+const COLLECTION_NAME = "news";
+
 // Fetch news from local news-bot server (MongoDB backend)
 async function runFetchNews({ topic = "", search = "", page = 1, pageSize = 10 }) {
-  let url = "http://localhost:4000/news";
+  let url = "https://your-backend.onrender.com/news";
   let filter = null;
 
   // For topic tab, fetch by topic

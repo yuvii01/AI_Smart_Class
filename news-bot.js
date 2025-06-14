@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const app = express();
 
@@ -10,14 +11,13 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const cron = require("node-cron");
 const { MongoClient } = require("mongodb");
 
-// Use your MongoDB Atlas URI here (replace <password> and cluster info)
-const MONGO_URI = "mongodb+srv://yuvrajmaheshwari07:L4oJNws9edoxPzDa@cluster0.wzqk21t.mongodb.net/newsbot?retryWrites=true&w=majority";
+// Use environment variables from .env
+const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = "newsbot";
 const COLLECTION_NAME = "news";
-
-const API_KEY = "8e14109d2d6c4fe3a7010bd628924afa";
-const API_URL = "http://newsapi.org/v2/everything";
-const PORT = 4000;
+const API_KEY = process.env.API_KEY;
+const API_URL = process.env.API_URL;
+const PORT = process.env.PORT || 4000;
 
 // List of UPSC-relevant topics to cache (as an array)
 const TOPICS = [
@@ -127,37 +127,37 @@ cron.schedule("0 * * * *", fetchAllTopicsNews);
 fetchAllTopicsNews();
 
 // Serve cached news for a topic or all topics
-// app.get("/news", async (req, res) => {
-//   const client = new MongoClient(MONGO_URI);
-//   try {
-//     await client.connect();
-//     const db = client.db(DB_NAME);
-//     const collection = db.collection(COLLECTION_NAME);
-//     const { topic } = req.query;
-//     if (topic) {
-//       const t = topic.toLowerCase();
-//       const doc = await collection.findOne({ topic: t });
-//       if (doc && doc.articles) {
-//         res.json(doc.articles);
-//       } else {
-//         res.json([]);
-//       }
-//     } else {
-//       // Return all topics as an object (like the old JSON file)
-//       const docs = await collection.find({}).toArray();
-//       const allNews = {};
-//       docs.forEach(doc => {
-//         allNews[doc.topic] = doc.articles;
-//       });
-//       res.json(allNews);
-//     }
-//   } catch (err) {
-//     res.status(500).json({ error: "Database error", details: err.message });
-//   } finally {
-//     await client.close();
-//   }
-// });
+app.get("/news", async (req, res) => {
+  const client = new MongoClient(MONGO_URI);
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection(COLLECTION_NAME);
+    const { topic } = req.query;
+    if (topic) {
+      const t = topic.toLowerCase();
+      const doc = await collection.findOne({ topic: t });
+      if (doc && doc.articles) {
+        res.json(doc.articles);
+      } else {
+        res.json([]);
+      }
+    } else {
+      // Return all topics as an object (like the old JSON file)
+      const docs = await collection.find({}).toArray();
+      const allNews = {};
+      docs.forEach(doc => {
+        allNews[doc.topic] = doc.articles;
+      });
+      res.json(allNews);
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Database error", details: err.message });
+  } finally {
+    await client.close();
+  }
+});
 
-// app.listen(PORT, () => {
-//   console.log(`News bot running at http://localhost:${PORT}/news`);
-// });
+app.listen(PORT, () => {
+  console.log(`News bot running at http://localhost:${PORT}/news`);
+});
